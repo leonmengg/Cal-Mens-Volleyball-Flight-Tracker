@@ -8,6 +8,54 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+/* ---------- Tabs (scroll horizontally on small phones) ---------- */
+  .tab-row{display:flex;gap:7px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;}
+  .tab-row::-webkit-scrollbar{display:none;}
+  .tab-row .tab-btn{white-space:nowrap;min-width:max-content;}
+
+  /* ---------- Schedule view ---------- */
+  .sched-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .seg{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;}
+  .seg-btn{border:none;background:transparent;color:var(--sub);font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:7px;cursor:pointer;}
+  .seg-btn.on{background:var(--blue-bg);color:var(--blue-text);}
+  .next-banner{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:16px;box-shadow:var(--shadow);}
+  .next-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--gold-text);}
+  .next-main{font-size:16px;font-weight:800;margin-top:2px;color:var(--blue-text);}
+  .next-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+  .day-header{position:sticky;top:0;z-index:2;background:var(--bg);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);padding:10px 2px 6px;}
+  .sched-card{padding:12px 14px;margin-bottom:8px;}
+  .sched-card.is-past{opacity:.55;}
+  .sched-card.is-air{border-color:var(--ok-text);}
+  .sched-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .sched-flight{font-size:13px;font-weight:800;padding:3px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--line);letter-spacing:.02em;}
+  .sched-tag{font-size:11px;font-weight:700;color:var(--sub);}
+  .sched-status{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
+  .s-upcoming{background:var(--blue-bg);color:var(--blue-text);}
+  .s-air{background:var(--ok-bg);color:var(--ok-text);}
+  .s-done{background:var(--bg);color:var(--sub);}
+  .sched-count{margin-left:auto;font-size:12px;font-weight:700;color:var(--sub);}
+  .sched-route{display:flex;align-items:center;gap:12px;}
+  .sched-end{min-width:76px;}
+  .sched-time{font-size:18px;font-weight:800;line-height:1.1;white-space:nowrap;}
+  .sched-time sup{font-size:10px;color:var(--gold-text);margin-left:2px;}
+  .sched-code{font-size:12px;font-weight:700;color:var(--sub);margin-top:2px;}
+  .sched-path{flex:1;text-align:center;}
+  .sched-line{position:relative;height:16px;}
+  .sched-line::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:1.5px dashed var(--line);}
+  .sched-line span{position:relative;background:var(--card);padding:0 6px;font-size:13px;color:var(--sub);}
+  .sched-dur{font-size:11px;color:var(--sub);margin-top:2px;}
+  .sched-people{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+  .chip{border:none;font-family:inherit;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;cursor:pointer;}
+  .chip:hover{filter:brightness(.95);}
+  .sched-warn{font-size:11.5px;color:var(--gold-text);margin-top:8px;}
+  .now-line{display:flex;align-items:center;gap:8px;margin:6px 0 10px;color:#e5484d;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;}
+  .now-line::before{content:'';flex:0 0 12px;border-top:1.5px solid #e5484d;}
+  .now-line::after{content:'';flex:1;border-top:1.5px solid #e5484d;}
+  .show-past{width:100%;padding:9px;border-radius:10px;border:1px dashed var(--line);background:transparent;color:var(--sub);font-size:12.5px;font-weight:700;cursor:pointer;margin-bottom:10px;}
+  .sched-section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);margin:22px 0 8px;}
+  .missing-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid var(--line);padding:10px 14px;font-size:12.5px;color:var(--ink);cursor:pointer;font-family:inherit;}
+  .missing-row:last-child{border-bottom:none;}
+  .missing-row:hover{background:var(--bg);}
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   :root{
@@ -136,8 +184,8 @@ const TEAMS = {
   A: { label: 'A Team', solid: 'var(--blue-solid)', text: 'var(--blue-text)', bg: 'var(--blue-bg)' },
   B: { label: 'B Team', solid: 'var(--gold-solid)', text: 'var(--gold-text)', bg: 'var(--gold-bg)' }
 };
-let state = { people: {}, rides: [], tab: 'A', editing: null, addingTeam: null };
-let db = null, connected = false;
+let state = { people: {}, rides: [], tab: 'S', editing: null, addingTeam: null,
+              schedLeg: 'out', schedTeam: 'all', showPast: false };let db = null, connected = false;
 
 function emptyLeg(){ return {flightNum:'',from:'',to:'',depDate:'',depTime:'',arrDate:'',arrTime:''}; }
 function blankPerson(id, team, slot){ return {id, team, slot, name:'', mode:'fly', out:emptyLeg(), ret:emptyLeg(), driveNotes:'', arrived:false}; }
@@ -352,6 +400,7 @@ function render(){
   const app = document.getElementById('app');
   const tab = state.tab;
   const tabs = [
+    {id:'S', label:'🗓 Schedule', text:'var(--blue-text)', bg:'var(--blue-bg)'},
     {id:'A', label:TEAMS.A.label, text:TEAMS.A.text, bg:TEAMS.A.bg},
     {id:'B', label:TEAMS.B.label, text:TEAMS.B.text, bg:TEAMS.B.bg},
     {id:'U', label:'🚗 Group Ubers', text:'var(--blue-text)', bg:'var(--gold-bg)'}
@@ -383,11 +432,11 @@ function render(){
       </div>
     </div>
     <div style="font-size:13px;color:var(--sub);margin-bottom:16px;">Everyone on the roster fills in their own row below. Updates sync live for anyone with this link.</div>
-    ${tab!=='U' ? summaryHTML() : ''}
-    <div style="display:flex;gap:7px;margin-bottom:16px;">
+    <div class="tab-row">
       ${tabs.map(t=>`<button class="tab-btn" onclick="setTab('${t.id}')" style="border:1.5px solid ${tab===t.id?t.text:'var(--line)'};background:${tab===t.id?t.bg:'var(--card)'};color:${tab===t.id?t.text:'var(--ink)'};">${t.label}</button>`).join('')}
     </div>
-    <div>${tab==='U' ? ridesTabHTML() : teamTabHTML(tab)}</div>
+    ${tab==='A' || tab==='B' ? summaryHTML() : ''}
+    <div>${tab==='S' ? scheduleTabHTML() : tab==='U' ? ridesTabHTML() : teamTabHTML(tab)}</div>
   `;
 }
 
@@ -426,6 +475,244 @@ function savePerson(id){
 function toggleArrived(id, val){ db.ref('tracker/people/'+id+'/arrived').set(val); }
 
 init();
+/* ============================================================
+   SCHEDULE VIEW: groups everyone by flight, sorts chronologically
+   ============================================================ */
+const AIRPORT_TZ = {
+  SFO:'America/Los_Angeles', OAK:'America/Los_Angeles', SJC:'America/Los_Angeles', LAX:'America/Los_Angeles',
+  BUR:'America/Los_Angeles', LGB:'America/Los_Angeles', ONT:'America/Los_Angeles', SNA:'America/Los_Angeles',
+  SAN:'America/Los_Angeles', SMF:'America/Los_Angeles', FAT:'America/Los_Angeles', PSP:'America/Los_Angeles',
+  LAS:'America/Los_Angeles', RNO:'America/Los_Angeles', SEA:'America/Los_Angeles', PDX:'America/Los_Angeles',
+  PHX:'America/Phoenix', TUS:'America/Phoenix', BOI:'America/Boise',
+  SLC:'America/Denver', DEN:'America/Denver', ABQ:'America/Denver',
+  HNL:'Pacific/Honolulu', OGG:'Pacific/Honolulu',
+  ORD:'America/Chicago', MDW:'America/Chicago', DFW:'America/Chicago', IAH:'America/Chicago',
+  AUS:'America/Chicago', SAT:'America/Chicago', MSP:'America/Chicago', STL:'America/Chicago', MCI:'America/Chicago',
+  DTW:'America/Detroit',
+  ATL:'America/New_York', MIA:'America/New_York', MCO:'America/New_York', CLT:'America/New_York',
+  RDU:'America/New_York', JFK:'America/New_York', LGA:'America/New_York', EWR:'America/New_York',
+  BOS:'America/New_York', PHL:'America/New_York', DCA:'America/New_York', IAD:'America/New_York', BWI:'America/New_York'
+};
+
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function findCode(str){
+  const up = String(str||'').toUpperCase();
+  const m = up.match(/\(([A-Z]{3})\)/) || up.match(/\b([A-Z]{3})\b/);
+  return m ? m[1] : null;
+}
+function airportLabel(str){ return findCode(str) || String(str||'').trim() || '—'; }
+function airportTZ(str){ const c = findCode(str); return c ? AIRPORT_TZ[c] || null : null; }
+
+// Offset (ms) of a timezone from UTC at a given instant
+function tzOffsetMs(ts, tz){
+  const parts = new Intl.DateTimeFormat('en-US', {timeZone:tz, hourCycle:'h23', year:'numeric', month:'2-digit',
+    day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'}).formatToParts(new Date(ts));
+  const v = {}; parts.forEach(p => v[p.type] = p.value);
+  return Date.UTC(+v.year, v.month - 1, +v.day, +v.hour, +v.minute, +v.second) - ts;
+}
+// Converts a local date+time at an airport into a real timestamp, so sorting works across timezones
+function toTimestamp(date, time, airport){
+  if(!date) return null;
+  const [y,m,d] = date.split('-').map(Number);
+  const [hh,mm] = (time || '00:00').split(':').map(Number);
+  const tz = airportTZ(airport);
+  if(!tz) return new Date(y, m-1, d, hh, mm).getTime(); // unknown airport: use viewer's timezone
+  const guess = Date.UTC(y, m-1, d, hh, mm);
+  let ts = guess - tzOffsetMs(guess, tz);
+  ts = guess - tzOffsetMs(ts, tz); // second pass handles DST edges
+  return ts;
+}
+
+function fmtTime12(t){
+  if(!t) return '—';
+  const [h,m] = t.split(':').map(Number);
+  return ((h % 12) || 12) + ':' + String(m).padStart(2,'0') + ' ' + (h >= 12 ? 'PM' : 'AM');
+}
+function fmtDayHeader(date){
+  const [y,m,d] = date.split('-').map(Number);
+  return new Date(y, m-1, d).toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
+}
+function fmtDuration(ms){
+  if(!ms || ms <= 0) return '';
+  const mins = Math.round(ms / 60000), h = Math.floor(mins / 60), m = mins % 60;
+  return ((h ? h + 'h ' : '') + (m ? m + 'm' : '')).trim();
+}
+function relTime(ms){
+  const mins = Math.round(Math.abs(ms) / 60000);
+  if(mins < 60) return mins + ' min';
+  const h = Math.floor(mins / 60), m = mins % 60;
+  if(h < 48) return h + 'h' + (m ? ' ' + m + 'm' : '');
+  return Math.round(h / 24) + ' days';
+}
+function normFlight(n){ return String(n||'').toUpperCase().replace(/[\s\-]/g, ''); }
+function mostCommon(arr){
+  const c = {}; arr.filter(Boolean).forEach(v => c[v] = (c[v]||0) + 1);
+  const e = Object.entries(c).sort((a,b) => b[1] - a[1]);
+  return { value: e.length ? e[0][0] : '', conflict: e.length > 1 };
+}
+
+function buildSchedule(){
+  const groups = {}, incomplete = [], drivers = [];
+  const legs = state.schedLeg === 'all' ? ['out','ret'] : [state.schedLeg];
+  Object.entries(state.people).forEach(([id,p]) => {
+    if(!p || !p.team || !p.name) return;
+    if(state.schedTeam !== 'all' && p.team !== state.schedTeam) return;
+    if(p.mode === 'drive'){ drivers.push({id, p}); return; }
+    legs.forEach(leg => {
+      const L = p[leg] || {};
+      const num = normFlight(L.flightNum);
+      if(!num || !L.depDate || !L.depTime){ incomplete.push({id, p, leg, num}); return; }
+      const key = leg + '|' + num + '|' + L.depDate;
+      (groups[key] = groups[key] || {leg, num, depDate:L.depDate, entries:[]}).entries.push({id, p, L});
+    });
+  });
+
+  const flights = Object.values(groups).map(g => {
+    // If teammates typed slightly different details, use the most common value and flag it
+    const pick = k => mostCommon(g.entries.map(e => e.L[k]));
+    const f = { from:pick('from'), to:pick('to'), depTime:pick('depTime'), arrDate:pick('arrDate'), arrTime:pick('arrTime') };
+    const depTs = toTimestamp(g.depDate, f.depTime.value, f.from.value);
+    let arrTs = f.arrTime.value ? toTimestamp(f.arrDate.value || g.depDate, f.arrTime.value, f.to.value) : null;
+    if(arrTs != null && !f.arrDate.value && arrTs < depTs) arrTs += 864e5; // overnight flight, no arrival date given
+    return {
+      ...g, from:f.from.value, to:f.to.value, depTime:f.depTime.value,
+      arrDate:f.arrDate.value, arrTime:f.arrTime.value, depTs, arrTs,
+      conflict: Object.values(f).some(x => x.conflict),
+      entries: g.entries.sort((a,b) => a.p.name.localeCompare(b.p.name))
+    };
+  }).sort((a,b) => a.depTs - b.depTs);
+
+  return { flights, incomplete, drivers };
+}
+
+function flightStatus(f, now){
+  if(now < f.depTs) return { label:'Departs in ' + relTime(f.depTs - now), cls:'upcoming' };
+  if(f.arrTs && now < f.arrTs) return { label:'In the air · lands in ' + relTime(f.arrTs - now), cls:'air' };
+  if(!f.arrTs && now < f.depTs + 6*3600e3) return { label:'Departed', cls:'air' };
+  return { label:'Landed', cls:'done' };
+}
+
+function flightCardHTML(f, now){
+  const st = flightStatus(f, now);
+  const dayDiff = f.arrDate ? Math.round((Date.parse(f.arrDate) - Date.parse(f.depDate)) / 864e5) : 0;
+  const n = f.entries.length;
+  const chips = f.entries.map(({id,p}) => {
+    const t = TEAMS[p.team] || TEAMS.A;
+    return `<button class="chip" title="Edit ${esc(p.name)}" onclick="jumpToPerson('${id}')" style="background:${t.bg};color:${t.text};">${p.arrived ? '✓ ' : ''}${esc(p.name)}</button>`;
+  }).join('');
+  return `
+    <div class="card sched-card ${st.cls==='done'?'is-past':''} ${st.cls==='air'?'is-air':''}">
+      <div class="sched-top">
+        <span class="sched-flight">${esc(f.num)}</span>
+        ${state.schedLeg==='all' ? `<span class="sched-tag">${f.leg==='out'?'Outbound':'Return'}</span>` : ''}
+        <span class="sched-status s-${st.cls}">${st.label}</span>
+        <span class="sched-count">${n} ${n===1?'person':'people'}</span>
+      </div>
+      <div class="sched-route">
+        <div class="sched-end">
+          <div class="sched-time">${fmtTime12(f.depTime)}</div>
+          <div class="sched-code">${esc(airportLabel(f.from))}</div>
+        </div>
+        <div class="sched-path">
+          <div class="sched-line"><span>✈</span></div>
+          <div class="sched-dur">${fmtDuration(f.arrTs - f.depTs)}</div>
+        </div>
+        <div class="sched-end" style="text-align:right;">
+          <div class="sched-time">${fmtTime12(f.arrTime)}${dayDiff>0?`<sup>+${dayDiff}</sup>`:''}</div>
+          <div class="sched-code">${esc(airportLabel(f.to))}</div>
+        </div>
+      </div>
+      <div class="sched-people">${chips}</div>
+      ${f.conflict ? `<div class="sched-warn">⚠ Teammates entered different details for this flight. Tap a name to check.</div>` : ''}
+    </div>`;
+}
+
+function scheduleTabHTML(){
+  const now = Date.now();
+  const { flights, incomplete, drivers } = buildSchedule();
+  const seg = (val, label, cur, fn) => `<button class="seg-btn ${cur===val?'on':''}" onclick="${fn}('${val}')">${label}</button>`;
+
+  const controls = `
+    <div class="sched-controls">
+      <div class="seg">${seg('out','Outbound',state.schedLeg,'setSchedLeg')}${seg('ret','Return',state.schedLeg,'setSchedLeg')}${seg('all','All',state.schedLeg,'setSchedLeg')}</div>
+      <div class="seg">${seg('all','Everyone',state.schedTeam,'setSchedTeam')}${seg('A','A Team',state.schedTeam,'setSchedTeam')}${seg('B','B Team',state.schedTeam,'setSchedTeam')}</div>
+    </div>`;
+
+  const isDone = f => flightStatus(f, now).cls === 'done';
+  const done = flights.filter(isDone);
+  const next = flights.find(f => !isDone(f));
+
+  const banner = next ? (() => {
+    const st = flightStatus(next, now), n = next.entries.length;
+    return `
+      <div class="next-banner">
+        <div class="next-label">${st.cls==='air' ? 'In the air now' : 'Next up'}</div>
+        <div class="next-main">${esc(next.num)} · ${esc(airportLabel(next.from))} → ${esc(airportLabel(next.to))}</div>
+        <div class="next-sub">${st.label} · ${n} ${n===1?'person':'people'}</div>
+      </div>`;
+  })() : '';
+
+  const pastToggle = done.length
+    ? `<button class="show-past" onclick="toggleShowPast()">${state.showPast?'Hide':'Show'} ${done.length} completed flight${done.length===1?'':'s'}</button>` : '';
+
+  const visible = state.showPast ? flights : flights.filter(f => !isDone(f));
+  let list = '', lastDay = null, nowPlaced = false;
+  visible.forEach(f => {
+    if(state.showPast && done.length && !nowPlaced && now < f.depTs){ list += `<div class="now-line">Now</div>`; nowPlaced = true; }
+    if(f.depDate !== lastDay){ list += `<div class="day-header">${fmtDayHeader(f.depDate)}</div>`; lastDay = f.depDate; }
+    list += flightCardHTML(f, now);
+  });
+
+  const empty = flights.length === 0
+    ? `<div class="card" style="padding:18px;font-size:13px;color:var(--sub);text-align:center;">No flights with a date and departure time yet. Add them on the A Team / B Team tabs.</div>`
+    : (visible.length === 0 ? `<div style="font-size:13px;color:var(--sub);margin-bottom:10px;">All flights in this view have landed. ✈️</div>` : '');
+
+  const missing = incomplete.length ? `
+    <div class="sched-section-title">Missing flight details (${incomplete.length})</div>
+    <div class="card" style="padding:4px 0;overflow:hidden;">
+      ${incomplete.map(({id,p,leg,num}) => `
+        <button class="missing-row" onclick="jumpToPerson('${id}')">
+          <span><strong>${esc(p.name)}</strong> <span style="color:var(--sub);">(${p.team})</span></span>
+          <span style="color:var(--sub);">${leg==='out'?'Outbound':'Return'}: ${num ? esc(num) + ', needs date/time' : 'no flight entered'}</span>
+        </button>`).join('')}
+    </div>` : '';
+
+  const driving = drivers.length ? `
+    <div class="sched-section-title">Driving (${drivers.length})</div>
+    <div class="card" style="padding:4px 0;overflow:hidden;">
+      ${drivers.map(({id,p}) => `
+        <button class="missing-row" onclick="jumpToPerson('${id}')">
+          <span><strong>${esc(p.name)}</strong> <span style="color:var(--sub);">(${p.team})</span></span>
+          <span style="color:var(--sub);">🚗 ${esc(p.driveNotes || 'No details')}</span>
+        </button>`).join('')}
+    </div>` : '';
+
+  return `
+    ${controls}
+    ${banner}
+    ${pastToggle}
+    ${empty}
+    ${list}
+    ${missing}
+    ${driving}
+    <div style="font-size:11px;color:var(--sub);margin-top:16px;">Times are shown in each airport's local time. Statuses are based on scheduled times, not live flight data.</div>`;
+}
+
+function setSchedLeg(v){ state.schedLeg = v; render(); }
+function setSchedTeam(v){ state.schedTeam = v; render(); }
+function toggleShowPast(){ state.showPast = !state.showPast; render(); }
+function jumpToPerson(id){
+  const p = state.people[id]; if(!p) return;
+  state.tab = p.team;
+  startEdit(id);
+  setTimeout(() => {
+    const el = document.getElementById('name_' + id);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 50);
+}
+
+// Refresh countdowns every minute (skipped while someone is editing, so their input isn't wiped)
+setInterval(() => { if(state.tab === 'S' && !state.editing) render(); }, 60000);
 </script>
 </body>
 </html>
